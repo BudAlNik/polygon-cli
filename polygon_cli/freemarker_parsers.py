@@ -7,18 +7,12 @@ def get_decimal_or_variable_value(token, variables):
     assert(token in variables)
     return variables[token]
 
-
-def parse_freemarker_assign_expr(full_expr, variables):
-    full_expr = full_expr.decode("ascii")
-    pos_eq = full_expr.find("=")
-    assert(pos_eq != -1)
-    var = full_expr[: pos_eq].strip()
-    assert(re.search(r"^\w+$", var))
-
-    expr = full_expr[pos_eq + 1:].strip()
+def parse_freemarker_expr(expr, variables):
     pos = 0
 
     # TODO: Replace my parser by parser from ast
+    
+    expr = expr.strip()
 
     ops = [
             {
@@ -83,8 +77,19 @@ def parse_freemarker_assign_expr(full_expr, variables):
     val = parse_binary(0)
     
     assert(pos == len(expr))
+    return val
 
-    return [var, val]
+def parse_freemarker_assign_expr(full_expr, variables):
+    full_expr = full_expr.decode("ascii")
+    pos_eq = full_expr.find("=")
+    assert(pos_eq != -1)
+    var = full_expr[: pos_eq].strip()
+    assert(re.search(r"^\w+$", var))
+
+    expr = full_expr[pos_eq + 1:].strip()
+    
+
+    return [var, parse_freemarker_expr(expr, variables)]
 
 
 def parse_freemarker_list_as(s, variables):
@@ -102,5 +107,8 @@ def parse_freemarker_list_as(s, variables):
         return [var, range(from_value, to_value + 1)]
 
     assert(arr[0] == "[" and arr[-1] == "]")
-    ret = ast.literal_eval(arr)
+    ret = []
+
+    for expr in arr[1:-1].split(","):
+        ret.append(parse_freemarker_expr(expr, variables))
     return [var, ret]
