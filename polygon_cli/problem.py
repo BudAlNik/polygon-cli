@@ -307,6 +307,8 @@ class ProblemSession:
         for lang, files_raw in statements_raw.items():
             encoding = files_raw.get('encoding', None)
             for name, content in files_raw.items():
+                if name == 'encoding' or not isinstance(content, str):
+                    continue
                 file = polygon_file.PolygonFile()
                 file.type = 'statement'
                 file.name = '%s/%s.tex' % (lang, name)
